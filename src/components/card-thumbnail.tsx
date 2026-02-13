@@ -29,7 +29,7 @@ export function CardThumbnail({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex cursor-pointer flex-col rounded-lg border bg-card text-left shadow-sm transition hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex cursor-pointer flex-col rounded-lg border bg-card text-left shadow-sm transition hover:border-border/80 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
     >
