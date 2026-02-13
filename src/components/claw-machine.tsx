@@ -362,7 +362,7 @@ export function ClawMachine() {
       {/* ── Roulette ── */}
       <div
         ref={containerRef}
-        className="relative mb-5 overflow-hidden rounded-lg border bg-card py-6"
+        className="relative mb-5 overflow-hidden rounded-lg border bg-card py-12"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
