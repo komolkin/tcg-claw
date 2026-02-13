@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+**Pokémon TCG Catalogue** — Browse and search Pokémon Trading Card Game cards with filters (name, type, set, rarity). Click a card to view full details in a modal. Data from the [Pokémon TCG API](https://pokemontcg.io/).
+
+Optional: add `POKEMON_TCG_API_KEY` to `.env.local` (get a free key at [dev.pokemontcg.io](https://dev.pokemontcg.io)) for higher rate limits.
+
 ## Getting Started
 
 First, run the development server:

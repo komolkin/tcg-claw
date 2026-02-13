@@ -1,0 +1,127 @@
+/**
+ * TCGPlayer market prices for Base Set (Unlimited) cards.
+ * Sourced from dawnglare.com / TCGPlayer, Feb 2026.
+ *
+ * Key: card name (lowercase) → { variant, market price }
+ * Holo Rare cards use the "holofoil" variant; others use "normal".
+ */
+
+interface PriceEntry {
+  variant: "holofoil" | "normal";
+  market: number;
+}
+
+const prices: Record<string, PriceEntry> = {
+  // ── Holo Rare ──────────────────────────────────
+  alakazam:    { variant: "holofoil", market: 39.99 },
+  blastoise:  { variant: "holofoil", market: 93.64 },
+  chansey:    { variant: "holofoil", market: 20.0 },
+  charizard:  { variant: "holofoil", market: 348.07 },
+  clefairy:   { variant: "holofoil", market: 18.0 },
+  gyarados:   { variant: "holofoil", market: 16.72 },
+  hitmonchan: { variant: "holofoil", market: 9.97 },
+  machamp:    { variant: "holofoil", market: 8.5 },
+  magneton:   { variant: "holofoil", market: 16.28 },
+  mewtwo:     { variant: "holofoil", market: 25.0 },
+  nidoking:   { variant: "holofoil", market: 19.01 },
+  ninetales:  { variant: "holofoil", market: 15.48 },
+  poliwrath:  { variant: "holofoil", market: 20.05 },
+  raichu:     { variant: "holofoil", market: 39.97 },
+  venusaur:   { variant: "holofoil", market: 82.09 },
+  zapdos:     { variant: "holofoil", market: 28.11 },
+
+  // ── Rare ───────────────────────────────────────
+  beedrill:                { variant: "normal", market: 2.36 },
+  "clefairy doll":         { variant: "normal", market: 3.5 },
+  "computer search":       { variant: "normal", market: 2.9 },
+  "devolution spray":      { variant: "normal", market: 2.4 },
+  dragonair:               { variant: "normal", market: 6.88 },
+  dugtrio:                 { variant: "normal", market: 4.17 },
+  electabuzz:              { variant: "normal", market: 5.5 },
+  electrode:               { variant: "normal", market: 3.49 },
+  "impostor professor oak": { variant: "normal", market: 3.0 },
+  "item finder":           { variant: "normal", market: 6.73 },
+  lass:                    { variant: "normal", market: 1.79 },
+  pidgeotto:               { variant: "normal", market: 5.39 },
+  "pokémon breeder":       { variant: "normal", market: 4.99 },
+  "pokémon trader":        { variant: "normal", market: 3.4 },
+  "scoop up":              { variant: "normal", market: 5.79 },
+  "super energy removal":  { variant: "normal", market: 2.5 },
+
+  // ── Uncommon ───────────────────────────────────
+  arcanine:                  { variant: "normal", market: 1.49 },
+  charmeleon:                { variant: "normal", market: 0.9 },
+  dewgong:                   { variant: "normal", market: 1.26 },
+  "double colorless energy": { variant: "normal", market: 3.18 },
+  dragonite:                 { variant: "normal", market: 1.0 },
+  "farfetch'd":              { variant: "normal", market: 0.75 },
+  growlithe:                 { variant: "normal", market: 0.5 },
+  haunter:                   { variant: "normal", market: 0.81 },
+  ivysaur:                   { variant: "normal", market: 1.51 },
+  jynx:                      { variant: "normal", market: 0.6 },
+  kadabra:                   { variant: "normal", market: 0.82 },
+  kakuna:                    { variant: "normal", market: 0.4 },
+  machoke:                   { variant: "normal", market: 0.5 },
+  magikarp:                  { variant: "normal", market: 0.99 },
+  magmar:                    { variant: "normal", market: 1.1 },
+  maintenance:               { variant: "normal", market: 1.2 },
+  nidorino:                  { variant: "normal", market: 1.25 },
+  "pokémon center":          { variant: "normal", market: 0.88 },
+  "pokémon flute":           { variant: "normal", market: 1.08 },
+  "pokédex":                 { variant: "normal", market: 0.75 },
+  poliwhirl:                 { variant: "normal", market: 0.82 },
+  porygon:                   { variant: "normal", market: 1.18 },
+  raticate:                  { variant: "normal", market: 0.99 },
+  revive:                    { variant: "normal", market: 1.1 },
+  seel:                      { variant: "normal", market: 0.35 },
+  "super potion":            { variant: "normal", market: 0.5 },
+  wartortle:                 { variant: "normal", market: 1.99 },
+
+  // ── Common ─────────────────────────────────────
+  abra:                    { variant: "normal", market: 0.4 },
+  bulbasaur:               { variant: "normal", market: 1.34 },
+  caterpie:                { variant: "normal", market: 0.25 },
+  charmander:              { variant: "normal", market: 0.99 },
+  diglett:                 { variant: "normal", market: 0.25 },
+  doduo:                   { variant: "normal", market: 0.2 },
+  drowzee:                 { variant: "normal", market: 0.2 },
+  "energy removal":        { variant: "normal", market: 0.25 },
+  "fire energy":           { variant: "normal", market: 0.3 },
+  "fighting energy":       { variant: "normal", market: 0.3 },
+  gastly:                  { variant: "normal", market: 0.35 },
+  "grass energy":          { variant: "normal", market: 0.3 },
+  "gust of wind":          { variant: "normal", market: 0.2 },
+  koffing:                 { variant: "normal", market: 0.25 },
+  "lightning energy":      { variant: "normal", market: 0.3 },
+  machop:                  { variant: "normal", market: 0.25 },
+  metapod:                 { variant: "normal", market: 0.25 },
+  "nidoran ♂":             { variant: "normal", market: 0.3 },
+  onix:                    { variant: "normal", market: 0.35 },
+  pikachu:                 { variant: "normal", market: 2.0 },
+  poliwag:                 { variant: "normal", market: 0.2 },
+  "bill":                  { variant: "normal", market: 0.3 },
+  "potion":                { variant: "normal", market: 0.2 },
+  "professor oak":         { variant: "normal", market: 0.35 },
+  "psychic energy":        { variant: "normal", market: 0.3 },
+  rattata:                 { variant: "normal", market: 0.2 },
+  sandshrew:               { variant: "normal", market: 0.2 },
+  squirtle:                { variant: "normal", market: 1.65 },
+  "starmie":               { variant: "normal", market: 0.35 },
+  "staryu":                { variant: "normal", market: 0.2 },
+  "switch":                { variant: "normal", market: 0.25 },
+  tangela:                 { variant: "normal", market: 0.25 },
+  voltorb:                 { variant: "normal", market: 0.91 },
+  vulpix:                  { variant: "normal", market: 0.35 },
+  "weedle":                { variant: "normal", market: 0.25 },
+  "water energy":          { variant: "normal", market: 0.3 },
+  "pluspower":             { variant: "normal", market: 0.25 },
+  "defender":              { variant: "normal", market: 0.4 },
+  dratini:                 { variant: "normal", market: 0.35 },
+  magnemite:               { variant: "normal", market: 0.25 },
+  pidgey:                  { variant: "normal", market: 0.2 },
+  ponyta:                  { variant: "normal", market: 0.25 },
+  "energy retrieval":      { variant: "normal", market: 0.3 },
+  "full heal":             { variant: "normal", market: 0.2 },
+};
+
+export default prices;
