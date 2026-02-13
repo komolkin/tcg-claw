@@ -346,7 +346,7 @@ export function ClawMachine() {
       </h1>
 
       {/* ── Drop Rates ── */}
-      <div className="mb-5 flex flex-wrap justify-center gap-2">
+      <div className="mb-8 flex flex-wrap justify-center gap-2">
         {DROP_TIERS.map((t) => (
           <span
             key={t.tag}
@@ -362,7 +362,7 @@ export function ClawMachine() {
       {/* ── Roulette ── */}
       <div
         ref={containerRef}
-        className="relative mb-5 overflow-hidden rounded-lg border bg-card py-12"
+        className="relative mb-8 overflow-hidden rounded-lg border bg-card py-10"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
