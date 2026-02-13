@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RarityBadge } from "@/components/rarity-badge";
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -171,10 +172,10 @@ export function CardDetailModal({
                     </div>
                   )}
                   {displayCard.rarity && (
-                    <p>
+                    <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">Rarity: </span>
-                      {displayCard.rarity}
-                    </p>
+                      <RarityBadge rarity={displayCard.rarity} />
+                    </div>
                   )}
                   {displayCard.artist && (
                     <p>

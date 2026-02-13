@@ -1,9 +1,9 @@
 "use client";
 
 import type { Card } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getCardMarketPrice } from "@/lib/api";
+import { RarityBadge } from "@/components/rarity-badge";
 
 interface CardThumbnailProps {
   card: Card;
@@ -44,11 +44,7 @@ export function CardThumbnail({
       <div className="flex flex-col gap-1 p-2">
         <span className="truncate text-sm font-medium">{card.name}</span>
         <div className="flex items-center justify-between gap-1">
-          {card.rarity && (
-            <Badge variant="secondary" className="w-fit text-xs">
-              {card.rarity}
-            </Badge>
-          )}
+          {card.rarity && <RarityBadge rarity={card.rarity} className="text-xs" />}
           {price && (
             <span className="text-xs font-semibold text-green-600 dark:text-green-400">
               {price}
