@@ -9,7 +9,7 @@ import { CardGrid } from "@/components/card-grid";
 import { CardDetailModal } from "@/components/card-detail-modal";
 import { Pagination } from "@/components/pagination";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 18;
 const PRICE_SORT_PAGE_SIZE = 250;
 
 function getQueryKey(debouncedName: string, filters: FilterState): string {

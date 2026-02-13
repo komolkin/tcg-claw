@@ -90,7 +90,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
     filters.sortOrder === DEFAULT_FILTERS.sortOrder;
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center justify-center gap-3">
       <Input
         placeholder="Search by name..."
         value={filters.name}
