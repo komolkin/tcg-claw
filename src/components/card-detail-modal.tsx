@@ -19,6 +19,39 @@ interface CardDetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function CardImage({ card }: { card: Card }) {
+  const [loaded, setLoaded] = useState(false);
+  const src = card.images.large || card.images.small;
+
+  // Reset loaded state when the card changes.
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
+
+  return (
+    <div className="flex justify-center">
+      <div className="relative">
+        {!loaded && (
+          <Skeleton className="aspect-3/4 w-[280px] rounded-lg" />
+        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={card.name}
+          className={`max-h-[400px] w-auto rounded-lg object-contain shadow-md transition-opacity duration-300 ${loaded ? "opacity-100" : "absolute inset-0 opacity-0"}`}
+          onLoad={() => setLoaded(true)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function getTcgPlayerUrl(card: Card): string {
+  if (card.tcgplayer?.url) return card.tcgplayer.url;
+  const query = encodeURIComponent(card.name);
+  return `https://www.tcgplayer.com/search/pokemon/base-set?q=${query}`;
+}
+
 function PriceDisplay({ card }: { card: Card }) {
   const prices = card.tcgplayer?.prices;
   if (!prices) return null;
@@ -26,10 +59,18 @@ function PriceDisplay({ card }: { card: Card }) {
     prices.holofoil ?? prices.normal ?? prices.reverseHolofoil ?? null;
   const market = variant?.market ?? variant?.mid;
   if (market == null) return null;
+  const url = getTcgPlayerUrl(card);
   return (
     <p className="text-sm">
       <span className="text-muted-foreground">TCGplayer market: </span>
-      <span className="font-medium">${market.toFixed(2)}</span> USD
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+      >
+        ${market.toFixed(2)}
+      </a>
     </p>
   );
 }
@@ -86,14 +127,7 @@ export function CardDetailModal({
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-5rem)]">
           <div className="grid gap-6 p-6 pt-0 sm:grid-cols-[1fr,1fr]">
-            <div className="flex justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={displayCard.images.large || displayCard.images.small}
-                alt={displayCard.name}
-                className="max-h-[400px] w-auto rounded-lg object-contain shadow-md"
-              />
-            </div>
+            <CardImage card={displayCard} />
             <div className="flex flex-col gap-4 text-sm">
               {loading ? (
                 <div className="space-y-3">

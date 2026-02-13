@@ -4,24 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Card } from "@/lib/types";
 import { searchCards, getCardMarketPrice, LIST_SELECT } from "@/lib/api";
 import { useDebounce } from "@/hooks/use-debounce";
-import { FilterBar, type FilterState } from "@/components/filter-bar";
+import { FilterBar, DEFAULT_FILTERS, type FilterState } from "@/components/filter-bar";
 import { CardGrid } from "@/components/card-grid";
 import { CardDetailModal } from "@/components/card-detail-modal";
 import { Pagination } from "@/components/pagination";
 
 const PAGE_SIZE = 20;
 const PRICE_SORT_PAGE_SIZE = 250;
-
-/** Base Set (1st Edition era) set ID in the Pokemon TCG API. */
-const BASE_SET_ID = "base1";
-
-const defaultFilters: FilterState = {
-  name: "",
-  type: "",
-  setId: BASE_SET_ID,
-  rarity: "",
-  sortOrder: "priceDesc",
-};
 
 function getQueryKey(debouncedName: string, filters: FilterState): string {
   return JSON.stringify({
@@ -36,7 +25,7 @@ function getQueryKey(debouncedName: string, filters: FilterState): string {
 type PageCache = Map<number, { data: Card[]; totalCount: number }>;
 
 export function CardCatalogue() {
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedName = useDebounce(filters.name, 400);
   const [page, setPage] = useState(1);
   const [cards, setCards] = useState<Card[]>([]);

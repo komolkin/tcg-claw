@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -20,6 +21,14 @@ export interface FilterState {
   rarity: string;
   sortOrder: SortOrder;
 }
+
+export const DEFAULT_FILTERS: FilterState = {
+  name: "",
+  type: "",
+  setId: "base1",
+  rarity: "",
+  sortOrder: "priceDesc",
+};
 
 /** Types that exist in the Base Set. Used as default before API responds. */
 const BASE_SET_TYPES = [
@@ -74,6 +83,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
     onFiltersChange({ ...filters, ...patch });
   };
 
+  const isDefault =
+    filters.name === DEFAULT_FILTERS.name &&
+    filters.type === DEFAULT_FILTERS.type &&
+    filters.rarity === DEFAULT_FILTERS.rarity &&
+    filters.sortOrder === DEFAULT_FILTERS.sortOrder;
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Input
@@ -82,6 +97,14 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
         onChange={(e) => update({ name: e.target.value })}
         className="max-w-[220px]"
       />
+      <Select value="base1" disabled>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Set" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="base1">Base Set</SelectItem>
+        </SelectContent>
+      </Select>
       <Select
         value={filters.type || "all"}
         onValueChange={(v) => update({ type: v === "all" ? "" : v })}
@@ -97,14 +120,6 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
               {t}
             </SelectItem>
           ))}
-        </SelectContent>
-      </Select>
-      <Select value="base1" disabled>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Set" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="base1">Base Set</SelectItem>
         </SelectContent>
       </Select>
       <Select
@@ -136,6 +151,16 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
           <SelectItem value="priceAsc">Price: low to high</SelectItem>
         </SelectContent>
       </Select>
+      {!isDefault && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="cursor-pointer text-muted-foreground hover:text-foreground"
+          onClick={() => onFiltersChange(DEFAULT_FILTERS)}
+        >
+          Reset filters
+        </Button>
+      )}
     </div>
   );
 }
