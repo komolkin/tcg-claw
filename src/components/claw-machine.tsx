@@ -381,7 +381,7 @@ export function ClawMachine() {
   }
 
   return (
-    <section className="mb-36 flex md:min-h-[80vh] flex-col justify-center pt-16">
+    <section className="my-12 flex md:min-h-[80vh] flex-col justify-center">
       {/* ── Title ── */}
       <h1 className="mb-4 text-center text-3xl font-bold tracking-tight md:text-4xl">
         Rarible Claw Machine
@@ -404,7 +404,7 @@ export function ClawMachine() {
       {/* ── Roulette ── */}
       <div
         ref={containerRef}
-        className="relative mb-8 overflow-hidden rounded-lg border border-transparent bg-transparent py-6"
+        className="relative mb-8 overflow-hidden rounded-lg border border-transparent bg-transparent py-4"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",

@@ -32,9 +32,7 @@ function CardImage({ card }: { card: Card }) {
   return (
     <div className="flex justify-center">
       <div className="relative aspect-3/4 w-full max-w-[240px]">
-        {!loaded && (
-          <Skeleton className="absolute inset-0 rounded-lg" />
-        )}
+        {!loaded && <Skeleton className="absolute inset-0 rounded-lg" />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
