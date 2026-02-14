@@ -555,7 +555,7 @@ export function ClawMachine() {
                   claw machine!
                 </p>
                 <p>
-                  Hit <strong>&ldquo;Run Rarible Claw Machine&rdquo;</strong>{" "}
+                  Hit <strong>&ldquo;Run Claw Machine&rdquo;</strong>{" "}
                   and watch the roulette spin to reveal your pull. Good luck!
                 </p>
               </div>
