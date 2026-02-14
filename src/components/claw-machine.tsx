@@ -12,10 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Volume2, VolumeX } from "lucide-react";
+import { CircleHelp, Music, Volume2, VolumeX } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import confetti from "canvas-confetti";
 import { RarityBadge } from "@/components/rarity-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RetroMusic } from "@/lib/retro-music";
 
 /* ───────────────────────── Drop-rate tiers ───────────────────────── */
 
@@ -115,9 +117,15 @@ export function ClawMachine() {
   /* ── ui state ── */
   const [successOpen, setSuccessOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
+  const [soundOpen, setSoundOpen] = useState(false);
   const [shared, setShared] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  /* ── audio state ── */
+  const [sfxOn, setSfxOn] = useState(true);
+  const [sfxVolume, setSfxVolume] = useState(80);
+  const [musicOn, setMusicOn] = useState(true);
+  const [musicVolume, setMusicVolume] = useState(60);
 
   /* ── refs ── */
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,13 +135,57 @@ export function ClawMachine() {
   const audioRef = useRef<AudioContext | null>(null);
   const lastCenterRef = useRef(-1);
   const hasSpunRef = useRef(false);
-  const soundRef = useRef(true);
+  const sfxRef = useRef({ on: true, volume: 0.8 });
+  const musicRef = useRef({ on: true, volume: 0.6 });
   const lastTickTimeRef = useRef(0);
+  const bgMusic = useRef<RetroMusic | null>(null);
+  const musicStarted = useRef(false);
 
-  // keep soundRef in sync
+  // keep refs in sync
   useEffect(() => {
-    soundRef.current = soundOn;
-  }, [soundOn]);
+    sfxRef.current = { on: sfxOn, volume: sfxVolume / 100 };
+  }, [sfxOn, sfxVolume]);
+
+  useEffect(() => {
+    musicRef.current = { on: musicOn, volume: musicVolume / 100 };
+  }, [musicOn, musicVolume]);
+
+  // Lazily create music engine
+  const getMusic = useCallback(() => {
+    if (!bgMusic.current) bgMusic.current = new RetroMusic();
+    return bgMusic.current;
+  }, []);
+
+  // Sync music volume
+  useEffect(() => {
+    const m = bgMusic.current;
+    if (!m) return;
+    m.setVolume(musicVolume / 100);
+  }, [musicVolume]);
+
+  // Start / stop music when musicOn toggles
+  useEffect(() => {
+    const m = bgMusic.current;
+    if (!m) return;
+    if (musicOn && musicStarted.current) {
+      m.setVolume(musicVolume / 100);
+      m.start();
+    } else {
+      m.stop();
+    }
+  }, [musicOn, musicVolume]);
+
+  // Switch music mode when spinning changes
+  useEffect(() => {
+    const m = bgMusic.current;
+    if (!m) return;
+    m.setMode(spinning ? "spin" : "idle");
+  }, [spinning]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => bgMusic.current?.dispose();
+  }, []);
 
   /* ── load cards on mount ── */
   useEffect(() => {
@@ -187,7 +239,8 @@ export function ClawMachine() {
   }
 
   const playTick = useCallback(() => {
-    if (!soundRef.current) return;
+    const { on, volume } = sfxRef.current;
+    if (!on || volume === 0) return;
     const now = performance.now();
     if (now - lastTickTimeRef.current < 50) return; // throttle
     lastTickTimeRef.current = now;
@@ -198,14 +251,15 @@ export function ClawMachine() {
     gain.connect(ctx.destination);
     osc.frequency.value = 600 + Math.random() * 600;
     osc.type = "sine";
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08 * volume, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
     osc.start();
     osc.stop(ctx.currentTime + 0.04);
   }, []);
 
   const playWin = useCallback(() => {
-    if (!soundRef.current) return;
+    const { on, volume } = musicRef.current;
+    if (!on || volume === 0) return;
     const ctx = ensureAudioCtx();
     const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
     notes.forEach((freq, i) => {
@@ -216,7 +270,7 @@ export function ClawMachine() {
       osc.frequency.value = freq;
       osc.type = "triangle";
       const t0 = ctx.currentTime + i * 0.12;
-      gain.gain.setValueAtTime(0.12, t0);
+      gain.gain.setValueAtTime(0.12 * volume, t0);
       gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
       osc.start(t0);
       osc.stop(t0 + 0.35);
@@ -243,7 +297,16 @@ export function ClawMachine() {
     setSpinning(true);
 
     // Ensure audio context is warm (user gesture)
-    if (soundRef.current) ensureAudioCtx();
+    if (sfxRef.current.on || musicRef.current.on) ensureAudioCtx();
+
+    // Start background music on first interaction
+    if (!musicStarted.current && musicRef.current.on) {
+      const m = getMusic();
+      m.setVolume(musicRef.current.volume);
+      m.setMode("idle");
+      m.start();
+      musicStarted.current = true;
+    }
 
     // Double-rAF: wait for React to commit the new strip, then animate
     requestAnimationFrame(() => {
@@ -298,7 +361,7 @@ export function ClawMachine() {
         rafRef.current = requestAnimationFrame(tick);
       });
     });
-  }, [spinning, cards, tiers, highlightCenter, playTick, playWin]);
+  }, [spinning, cards, tiers, highlightCenter, playTick, playWin, getMusic]);
 
   // Clean up animation on unmount
   useEffect(() => {
@@ -418,23 +481,94 @@ export function ClawMachine() {
           {spinning ? "Spinning…" : "Run Claw Machine"}
         </Button>
 
-        <Button variant="ghost" size="lg" onClick={() => setHowOpen(true)}>
-          How it works
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          onClick={() => setHowOpen(true)}
+          aria-label="How it works"
+        >
+          <CircleHelp className="size-5" />
         </Button>
 
         <Button
           variant="ghost"
           size="icon-lg"
-          onClick={() => setSoundOn((v) => !v)}
-          aria-label={soundOn ? "Mute sound" : "Unmute sound"}
+          onClick={() => setSoundOpen(true)}
+          aria-label="Sound settings"
         >
-          {soundOn ? (
-            <Volume2 className="size-5" />
-          ) : (
-            <VolumeX className="size-5" />
-          )}
+          <Music className="size-5" />
         </Button>
       </div>
+
+      {/* ── Sound settings modal ── */}
+      <Dialog open={soundOpen} onOpenChange={setSoundOpen}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Sound Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* SFX */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Sound Effects</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSfxOn((v) => !v)}
+                  aria-label={sfxOn ? "Mute SFX" : "Unmute SFX"}
+                >
+                  {sfxOn ? (
+                    <Volume2 className="size-4" />
+                  ) : (
+                    <VolumeX className="size-4" />
+                  )}
+                </Button>
+              </div>
+              <Slider
+                value={[sfxOn ? sfxVolume : 0]}
+                onValueChange={([v]) => {
+                  setSfxVolume(v);
+                  if (v > 0 && !sfxOn) setSfxOn(true);
+                  if (v === 0) setSfxOn(false);
+                }}
+                max={100}
+                step={1}
+                disabled={!sfxOn}
+              />
+            </div>
+
+            {/* Music */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Music</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMusicOn((v) => !v)}
+                  aria-label={musicOn ? "Mute music" : "Unmute music"}
+                >
+                  {musicOn ? (
+                    <Volume2 className="size-4" />
+                  ) : (
+                    <VolumeX className="size-4" />
+                  )}
+                </Button>
+              </div>
+              <Slider
+                value={[musicOn ? musicVolume : 0]}
+                onValueChange={([v]) => {
+                  setMusicVolume(v);
+                  if (v > 0 && !musicOn) setMusicOn(true);
+                  if (v === 0) setMusicOn(false);
+                }}
+                max={100}
+                step={1}
+                disabled={!musicOn}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── How it works modal ── */}
       <Dialog open={howOpen} onOpenChange={setHowOpen}>
@@ -467,7 +601,7 @@ export function ClawMachine() {
           if (!open) setShared(false);
         }}
       >
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-xs">
           <DialogHeader>
             <DialogTitle className="text-center text-lg">
               You pulled
@@ -476,15 +610,15 @@ export function ClawMachine() {
 
           {wonCard && (
             <div className="flex flex-col items-center gap-3">
-              <div className="relative w-52">
+              <div className="relative aspect-3/4 w-52">
                 {!imgLoaded && (
-                  <Skeleton className="aspect-3/4 w-full rounded-lg" />
+                  <Skeleton className="absolute inset-0 rounded-lg" />
                 )}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={wonCard.images.large || wonCard.images.small}
                   alt={wonCard.name}
-                  className={`w-full rounded-lg shadow-lg transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "absolute inset-0 opacity-0"}`}
+                  className={`absolute inset-0 h-full w-full rounded-lg object-contain shadow-lg transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
                   onLoad={() => setImgLoaded(true)}
                 />
               </div>

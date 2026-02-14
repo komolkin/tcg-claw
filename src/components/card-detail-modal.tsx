@@ -31,15 +31,15 @@ function CardImage({ card }: { card: Card }) {
 
   return (
     <div className="flex justify-center">
-      <div className="relative">
+      <div className="relative aspect-3/4 w-full max-w-[240px]">
         {!loaded && (
-          <Skeleton className="aspect-3/4 w-[280px] rounded-lg" />
+          <Skeleton className="absolute inset-0 rounded-lg" />
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={card.name}
-          className={`max-h-[400px] w-auto rounded-lg object-contain shadow-md transition-opacity duration-300 ${loaded ? "opacity-100" : "absolute inset-0 opacity-0"}`}
+          className={`absolute inset-0 h-full w-full rounded-lg object-contain shadow-md transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
         />
       </div>
@@ -122,12 +122,12 @@ export function CardDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl gap-0 p-0">
-        <DialogHeader className="space-y-2 p-6 pb-2">
-          <DialogTitle className="pr-8">{displayCard.name}</DialogTitle>
+      <DialogContent className="max-h-[90vh] sm:max-w-xs gap-0 p-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{displayCard.name}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-5rem)]">
-          <div className="grid gap-6 p-6 pt-0 sm:grid-cols-[1fr,1fr]">
+          <div className="grid gap-6 p-6 sm:grid-cols-[1fr,1fr]">
             <CardImage card={displayCard} />
             <div className="flex flex-col gap-4 text-sm">
               {loading ? (
@@ -151,6 +151,7 @@ export function CardDetailModal({
                       <Badge key={t}>{t}</Badge>
                     ))}
                   </div>
+                  <h3 className="text-lg font-semibold">{displayCard.name}</h3>
                   {(displayCard.hp ?? displayCard.number) && (
                     <div className="flex gap-4">
                       {displayCard.hp && (
