@@ -22,34 +22,10 @@ import { RetroMusic } from "@/lib/retro-music";
 /* ───────────────────────── Drop-rate tiers ───────────────────────── */
 
 const DROP_TIERS = [
-  {
-    label: "$0 – $1",
-    tag: "Common",
-    rate: 0.45,
-    color:
-      "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  },
-  {
-    label: "$1 – $10",
-    tag: "Uncommon",
-    rate: 0.3,
-    color:
-      "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  },
-  {
-    label: "$10 – $50",
-    tag: "Rare",
-    rate: 0.18,
-    color:
-      "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  },
-  {
-    label: "$50 +",
-    tag: "Ultra Rare",
-    rate: 0.07,
-    color:
-      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
-  },
+  { label: "$0 – $1", tag: "Common", rate: 0.45, dot: "bg-green-400" },
+  { label: "$1 – $10", tag: "Uncommon", rate: 0.3, dot: "bg-blue-400" },
+  { label: "$10 – $50", tag: "Rare", rate: 0.18, dot: "bg-purple-400" },
+  { label: "$50 +", tag: "Ultra Rare", rate: 0.07, dot: "bg-orange-400" },
 ] as const;
 
 function tierIndexForCard(card: Card): number {
@@ -93,9 +69,7 @@ function buildStrip(pool: Card[], winner: Card): Card[] {
   const out: Card[] = [];
   for (let i = 0; i < STRIP_LEN; i++) {
     out.push(
-      i === WIN_IDX
-        ? winner
-        : pool[Math.floor(Math.random() * pool.length)],
+      i === WIN_IDX ? winner : pool[Math.floor(Math.random() * pool.length)],
     );
   }
   return out;
@@ -215,7 +189,6 @@ export function ClawMachine() {
     const x = mid * STEP - cw / 2 + CARD_W / 2;
     stripRef.current.style.transition = "none";
     stripRef.current.style.transform = `translateX(${-x}px)`;
-    highlightCenter(mid);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [strip, spinning]);
 
@@ -290,6 +263,12 @@ export function ClawMachine() {
       el.style.transform = "";
     });
     lastCenterRef.current = -1;
+
+    // Preload the large modal image during the spin so it's cached when the modal opens
+    const modalSrc = winner.images.large || winner.images.small;
+    const preload = new Image();
+    preload.src = modalSrc;
+    preload.onload = () => setImgLoaded(true);
 
     setStrip(newStrip);
     setWonCard(winner);
@@ -372,10 +351,10 @@ export function ClawMachine() {
 
   const handleShare = useCallback(async () => {
     if (!wonCard) return;
-    const text = `I just pulled ${wonCard.name} from the Claw Machine!`;
+    const text = `I just pulled ${wonCard.name} from the Rarible Claw Machine!`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Claw Machine Pull", text });
+        await navigator.share({ title: "Rarible Claw Machine Pull", text });
       } else {
         await navigator.clipboard.writeText(text);
         setShared(true);
@@ -392,7 +371,7 @@ export function ClawMachine() {
     return (
       <section className="mb-36 pt-16">
         <h1 className="mb-4 text-center text-3xl font-bold tracking-tight md:text-4xl">
-          Claw Machine
+          Rarible Claw Machine
         </h1>
         <div className="flex h-52 items-center justify-center rounded-lg border bg-card text-sm text-muted-foreground">
           Loading cards…
@@ -405,17 +384,17 @@ export function ClawMachine() {
     <section className="mb-36 pt-16">
       {/* ── Title ── */}
       <h1 className="mb-4 text-center text-3xl font-bold tracking-tight md:text-4xl">
-        Claw Machine
+        Rarible Claw Machine
       </h1>
 
       {/* ── Drop Rates ── */}
-      <div className="mb-8 flex flex-wrap justify-center gap-2">
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
         {DROP_TIERS.map((t) => (
           <span
             key={t.tag}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${t.color}`}
+            className="inline-flex items-center gap-1.5 text-xs"
           >
-            <span>{t.tag}</span>
+            <span className={`size-2.5 shrink-0 rounded-full ${t.dot}`} />
             <span className="opacity-60">{t.label}</span>
             <span className="font-bold">{(t.rate * 100).toFixed(0)}%</span>
           </span>
@@ -425,7 +404,7 @@ export function ClawMachine() {
       {/* ── Roulette ── */}
       <div
         ref={containerRef}
-        className="relative mb-8 overflow-hidden rounded-lg border bg-card py-10"
+        className="relative mb-8 overflow-hidden rounded-lg border border-transparent bg-transparent py-6"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
@@ -433,14 +412,6 @@ export function ClawMachine() {
             "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
         }}
       >
-        {/* Center indicator – triangles top & bottom */}
-        <div className="pointer-events-none absolute top-0 left-1/2 z-10 -translate-x-1/2">
-          <div className="h-0 w-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-primary/50" />
-        </div>
-        <div className="pointer-events-none absolute bottom-0 left-1/2 z-10 -translate-x-1/2">
-          <div className="h-0 w-0 border-b-8 border-l-8 border-r-8 border-l-transparent border-r-transparent border-b-primary/50" />
-        </div>
-
         {/* Card strip */}
         <div
           ref={stripRef}
@@ -578,14 +549,14 @@ export function ClawMachine() {
             <DialogDescription asChild>
               <div className="space-y-2 text-sm">
                 <p>
-                  The Claw Machine randomly picks a Pokémon card from the
-                  catalogue based on weighted drop rates. Rarer and more
+                  The Rarible Claw Machine randomly picks a Pokémon card from
+                  the catalogue based on weighted drop rates. Rarer and more
                   expensive cards have lower drop chances — just like a real
                   claw machine!
                 </p>
                 <p>
-                  Hit <strong>&ldquo;Run Claw Machine&rdquo;</strong> and watch
-                  the roulette spin to reveal your pull. Good luck!
+                  Hit <strong>&ldquo;Run Rarible Claw Machine&rdquo;</strong>{" "}
+                  and watch the roulette spin to reveal your pull. Good luck!
                 </p>
               </div>
             </DialogDescription>
@@ -598,7 +569,15 @@ export function ClawMachine() {
         open={successOpen}
         onOpenChange={(open) => {
           setSuccessOpen(open);
-          if (!open) setShared(false);
+          if (!open) {
+            setShared(false);
+            // Remove scale highlight from the winning card
+            if (lastCenterRef.current >= 0) {
+              const el = cardEls.current.get(lastCenterRef.current);
+              if (el) el.style.transform = "";
+              lastCenterRef.current = -1;
+            }
+          }
         }}
       >
         <DialogContent className="sm:max-w-xs">
@@ -628,7 +607,7 @@ export function ClawMachine() {
                 {(() => {
                   const price = getCardMarketPrice(wonCard);
                   return price > 0 ? (
-                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    <span className="text-sm font-semibold">
                       ${price.toFixed(2)}
                     </span>
                   ) : null;
@@ -646,7 +625,7 @@ export function ClawMachine() {
                 setTimeout(run, 250);
               }}
             >
-              Run Claw Machine again
+              Try again
             </Button>
             <Button className="w-full" variant="outline" onClick={handleShare}>
               {shared ? "Copied!" : "Flex"}

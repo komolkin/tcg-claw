@@ -44,12 +44,10 @@ export function CardThumbnail({
       <div className="flex flex-col gap-1 p-2">
         <span className="truncate text-sm font-medium">{card.name}</span>
         <div className="flex items-center justify-between gap-1">
-          {card.rarity && <RarityBadge rarity={card.rarity} className="text-xs" />}
-          {price && (
-            <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-              {price}
-            </span>
+          {card.rarity && (
+            <RarityBadge rarity={card.rarity} className="text-xs" />
           )}
+          {price && <span className="text-xs font-semibold">{price}</span>}
         </div>
       </div>
     </button>

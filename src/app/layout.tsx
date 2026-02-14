@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pokémon TCG Claw Machine",
+  title: "Pokémon TCG Rarible Claw Machine",
   description: "Browse and search Pokémon Trading Card Game cards",
 };
 
