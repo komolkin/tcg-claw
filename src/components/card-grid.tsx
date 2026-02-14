@@ -25,7 +25,7 @@ function ThumbnailSkeleton() {
 export function CardGrid({ cards, loading, onCardClick }: CardGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className="mx-auto grid max-w-[1246px] grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {Array.from({ length: 12 }).map((_, i) => (
           <ThumbnailSkeleton key={i} />
         ))}
@@ -34,7 +34,7 @@ export function CardGrid({ cards, loading, onCardClick }: CardGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    <div className="mx-auto grid max-w-[1246px] grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {cards.map((card) => (
         <CardThumbnail
           key={card.id}
