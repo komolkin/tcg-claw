@@ -381,7 +381,7 @@ export function ClawMachine() {
   }
 
   return (
-    <section className="mb-36 pt-16">
+    <section className="mb-36 flex md:min-h-[60vh] flex-col justify-center pt-16">
       {/* ── Title ── */}
       <h1 className="mb-4 text-center text-3xl font-bold tracking-tight md:text-4xl">
         Rarible Claw Machine
