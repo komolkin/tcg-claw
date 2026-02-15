@@ -77,7 +77,7 @@ function buildStrip(pool: Card[], winner: Card): Card[] {
 
 /* ═══════════════════════════ Component ═══════════════════════════ */
 
-export function ClawMachine() {
+export function ClawMachine({ onReady }: { onReady?: () => void }) {
   /* ── data state ── */
   const [cards, setCards] = useState<Card[]>([]);
   const [tiers, setTiers] = useState<Card[][]>([[], [], [], []]);
@@ -98,7 +98,7 @@ export function ClawMachine() {
   /* ── audio state ── */
   const [sfxOn, setSfxOn] = useState(true);
   const [sfxVolume, setSfxVolume] = useState(80);
-  const [musicOn, setMusicOn] = useState(true);
+  const [musicOn, setMusicOn] = useState(false);
   const [musicVolume, setMusicVolume] = useState(60);
 
   /* ── refs ── */
@@ -110,7 +110,7 @@ export function ClawMachine() {
   const lastCenterRef = useRef(-1);
   const hasSpunRef = useRef(false);
   const sfxRef = useRef({ on: true, volume: 0.8 });
-  const musicRef = useRef({ on: true, volume: 0.6 });
+  const musicRef = useRef({ on: false, volume: 0.6 });
   const lastTickTimeRef = useRef(0);
   const bgMusic = useRef<RetroMusic | null>(null);
   const musicStarted = useRef(false);
@@ -177,8 +177,11 @@ export function ClawMachine() {
         );
         setStrip(idle);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        setLoading(false);
+        onReady?.();
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── center the idle strip (only before first spin) ── */
   useEffect(() => {
@@ -248,6 +251,38 @@ export function ClawMachine() {
       osc.start(t0);
       osc.stop(t0 + 0.35);
     });
+  }, []);
+
+  /** 8-bit sprinkles – a burst of random high-pitched square-wave bleeps */
+  const playSprinkles = useCallback(() => {
+    const { on, volume } = sfxRef.current;
+    if (!on || volume === 0) return;
+    const ctx = ensureAudioCtx();
+
+    // Pentatonic-ish high notes for a magical sparkle feel
+    const palette = [1047, 1175, 1319, 1397, 1568, 1760, 1976, 2093, 2349, 2637];
+    const count = 14; // number of sparkle bleeps
+
+    for (let i = 0; i < count; i++) {
+      const freq = palette[Math.floor(Math.random() * palette.length)];
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "square";
+      osc.frequency.value = freq;
+
+      // Stagger each bleep with a little randomness for a "sprinkle" feel
+      const t0 = ctx.currentTime + i * 0.045 + Math.random() * 0.02;
+      const dur = 0.06 + Math.random() * 0.04;
+      const peakVol = (0.04 + Math.random() * 0.03) * volume;
+
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(peakVol, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.01);
+    }
   }, []);
 
   /* ──────────────── Run the claw machine ──────────────── */
@@ -328,6 +363,7 @@ export function ClawMachine() {
             playWin();
             setTimeout(() => {
               setSuccessOpen(true);
+              playSprinkles();
               confetti({
                 particleCount: 120,
                 spread: 80,
@@ -340,7 +376,7 @@ export function ClawMachine() {
         rafRef.current = requestAnimationFrame(tick);
       });
     });
-  }, [spinning, cards, tiers, highlightCenter, playTick, playWin, getMusic]);
+  }, [spinning, cards, tiers, highlightCenter, playTick, playWin, playSprinkles, getMusic]);
 
   // Clean up animation on unmount
   useEffect(() => {
@@ -367,18 +403,7 @@ export function ClawMachine() {
 
   /* ──────────────── Render ──────────────── */
 
-  if (loading) {
-    return (
-      <section className="mb-36 pt-16">
-        <h1 className="mb-4 text-center text-3xl font-bold tracking-tight md:text-4xl">
-          Rarible Claw Machine
-        </h1>
-        <div className="flex h-52 items-center justify-center rounded-lg border bg-card text-sm text-muted-foreground">
-          Loading cards…
-        </div>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   return (
     <section className="my-12 flex md:min-h-[80vh] flex-col justify-center">

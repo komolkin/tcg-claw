@@ -24,7 +24,7 @@ function getQueryKey(debouncedName: string, filters: FilterState): string {
 
 type PageCache = Map<number, { data: Card[]; totalCount: number }>;
 
-export function CardCatalogue() {
+export function CardCatalogue({ onReady }: { onReady?: () => void }) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const debouncedName = useDebounce(filters.name, 400);
   const [page, setPage] = useState(1);
@@ -35,6 +35,7 @@ export function CardCatalogue() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const cacheRef = useRef<Map<string, PageCache>>(new Map());
+  const readyFired = useRef(false);
 
   const queryKey = useMemo(
     () => getQueryKey(debouncedName, filters),
@@ -98,6 +99,10 @@ export function CardCatalogue() {
       setTotalCount(0);
     } finally {
       setLoading(false);
+      if (!readyFired.current) {
+        readyFired.current = true;
+        onReady?.();
+      }
     }
   }, [
     debouncedName,
@@ -106,6 +111,7 @@ export function CardCatalogue() {
     filters.rarity,
     filters.sortOrder,
     queryKey,
+    onReady,
   ]);
 
   useEffect(() => {
