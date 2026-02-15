@@ -21,25 +21,36 @@ interface CardDetailModalProps {
 }
 
 function CardImage({ card }: { card: Card }) {
-  const [loaded, setLoaded] = useState(false);
-  const src = card.images.large || card.images.small;
+  const small = card.images.small;
+  const large = card.images.large;
+  const hasLarge = !!large && large !== small;
+  const [largeLoaded, setLargeLoaded] = useState(false);
 
-  // Reset loaded state when the card changes.
+  // Reset when the card changes
   useEffect(() => {
-    setLoaded(false);
-  }, [src]);
+    setLargeLoaded(false);
+  }, [card.id]);
 
   return (
     <div className="flex justify-center">
       <div className="relative aspect-3/4 w-full max-w-[240px]">
-        {!loaded && <Skeleton className="absolute inset-0 rounded-lg" />}
+        {/* Small image – already browser-cached from the grid thumbnail */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
+          src={small}
           alt={card.name}
-          className={`absolute inset-0 h-full w-full rounded-lg object-contain shadow-md transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
-          onLoad={() => setLoaded(true)}
+          className="absolute inset-0 h-full w-full rounded-lg object-contain shadow-md"
         />
+        {/* Large image – loads on top and fades in when ready */}
+        {hasLarge && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={large}
+            alt={card.name}
+            className={`absolute inset-0 h-full w-full rounded-lg object-contain shadow-md transition-opacity duration-300 ${largeLoaded ? "opacity-100" : "opacity-0"}`}
+            onLoad={() => setLargeLoaded(true)}
+          />
+        )}
       </div>
     </div>
   );
