@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { Card } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getCardMarketPrice } from "@/lib/api";
@@ -34,11 +35,13 @@ export function CardThumbnail({
       )}
     >
       <div className="relative aspect-3/4 w-full overflow-hidden rounded-t-lg bg-muted">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={card.images.small}
           alt={card.name}
-          className="h-full w-full object-contain"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
+          quality={50}
+          className="object-contain"
         />
       </div>
       <div className="flex flex-col gap-1 p-2">

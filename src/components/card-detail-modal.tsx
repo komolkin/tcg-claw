@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RarityBadge } from "@/components/rarity-badge";
+import { FlipCard } from "@/components/flip-card";
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -21,45 +22,19 @@ interface CardDetailModalProps {
 }
 
 function CardImage({ card }: { card: Card }) {
-  const small = card.images.small;
-  const large = card.images.large;
-  const hasLarge = !!large && large !== small;
-  const [largeLoaded, setLargeLoaded] = useState(false);
-
-  // Reset when the card changes
-  useEffect(() => {
-    setLargeLoaded(false);
-  }, [card.id]);
+  const front = card.images.large || card.images.small;
+  const back = card.images.back;
 
   return (
     <div className="flex justify-center">
-      <div className="relative aspect-3/4 w-full max-w-[240px]">
-        {/* Small image – already browser-cached from the grid thumbnail */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={small}
-          alt={card.name}
-          className="absolute inset-0 h-full w-full rounded-lg object-contain shadow-md"
-        />
-        {/* Large image – loads on top and fades in when ready */}
-        {hasLarge && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={large}
-            alt={card.name}
-            className={`absolute inset-0 h-full w-full rounded-lg object-contain shadow-md transition-opacity duration-300 ${largeLoaded ? "opacity-100" : "opacity-0"}`}
-            onLoad={() => setLargeLoaded(true)}
-          />
-        )}
-      </div>
+      <FlipCard
+        front={front}
+        back={back}
+        alt={card.name}
+        className="aspect-3/4 w-full max-w-[240px]"
+      />
     </div>
   );
-}
-
-function getTcgPlayerUrl(card: Card): string {
-  if (card.tcgplayer?.url) return card.tcgplayer.url;
-  const query = encodeURIComponent(card.name);
-  return `https://www.tcgplayer.com/search/pokemon/base-set?q=${query}`;
 }
 
 function PriceDisplay({ card }: { card: Card }) {
@@ -69,18 +44,23 @@ function PriceDisplay({ card }: { card: Card }) {
     prices.holofoil ?? prices.normal ?? prices.reverseHolofoil ?? null;
   const market = variant?.market ?? variant?.mid;
   if (market == null) return null;
-  const url = getTcgPlayerUrl(card);
+
+  const url = card.tcgplayer?.url;
   return (
     <p className="text-sm">
-      <span className="text-muted-foreground">TCGplayer market: </span>
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
-      >
-        ${market.toFixed(2)}
-      </a>
+      <span className="text-muted-foreground">Value: </span>
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+        >
+          ${market.toFixed(2)}
+        </a>
+      ) : (
+        <span className="font-medium">${market.toFixed(2)}</span>
+      )}
     </p>
   );
 }
@@ -161,7 +141,7 @@ export function CardDetailModal({
                     ))}
                   </div>
                   <h3 className="text-lg font-semibold">{displayCard.name}</h3>
-                  {(displayCard.hp ?? displayCard.number) && (
+                  {(displayCard.hp || (displayCard.number && displayCard.set.total > 0)) && (
                     <div className="flex gap-4">
                       {displayCard.hp && (
                         <span>
@@ -169,16 +149,18 @@ export function CardDetailModal({
                           <span className="font-medium">{displayCard.hp}</span>
                         </span>
                       )}
-                      <span>
-                        <span className="text-muted-foreground">No. </span>
-                        <span className="font-medium">
-                          {displayCard.number}
+                      {displayCard.number && displayCard.set.total > 0 && (
+                        <span>
+                          <span className="text-muted-foreground">No. </span>
+                          <span className="font-medium">
+                            {displayCard.number}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {" "}
+                            / {displayCard.set.total}
+                          </span>
                         </span>
-                        <span className="text-muted-foreground">
-                          {" "}
-                          / {displayCard.set.total}
-                        </span>
-                      </span>
+                      )}
                     </div>
                   )}
                   {displayCard.rarity && (

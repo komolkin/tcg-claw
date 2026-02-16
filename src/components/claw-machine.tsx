@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import type { Card } from "@/lib/types";
-import { searchCards, getCardMarketPrice, LIST_SELECT } from "@/lib/api";
+import { fetchMachineSlabs, slabToCard, getCardMarketPrice, warmImageCache } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,23 +18,29 @@ import { Slider } from "@/components/ui/slider";
 import confetti from "canvas-confetti";
 import { RarityBadge } from "@/components/rarity-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FlipCard } from "@/components/flip-card";
 import { RetroMusic } from "@/lib/retro-music";
 
 /* ───────────────────────── Drop-rate tiers ───────────────────────── */
 
 const DROP_TIERS = [
-  { label: "$0 – $1", tag: "Common", rate: 0.45, dot: "bg-green-400" },
-  { label: "$1 – $10", tag: "Uncommon", rate: 0.3, dot: "bg-blue-400" },
-  { label: "$10 – $50", tag: "Rare", rate: 0.18, dot: "bg-purple-400" },
-  { label: "$50 +", tag: "Ultra Rare", rate: 0.07, dot: "bg-orange-400" },
+  { label: "Common", tag: "Common", rate: 0.40, dot: "bg-gray-400" },
+  { label: "Uncommon", tag: "Uncommon", rate: 0.30, dot: "bg-green-400" },
+  { label: "Rare", tag: "Rare", rate: 0.18, dot: "bg-blue-400" },
+  { label: "Mythic", tag: "Mythic", rate: 0.09, dot: "bg-purple-400" },
+  { label: "Legendary", tag: "Legendary", rate: 0.03, dot: "bg-amber-400" },
 ] as const;
 
+const RARITY_TO_TIER: Record<string, number> = {
+  Common: 0,
+  Uncommon: 1,
+  Rare: 2,
+  Mythic: 3,
+  Legendary: 4,
+};
+
 function tierIndexForCard(card: Card): number {
-  const price = getCardMarketPrice(card);
-  if (price >= 50) return 3;
-  if (price >= 10) return 2;
-  if (price >= 1) return 1;
-  return 0;
+  return RARITY_TO_TIER[card.rarity ?? "Common"] ?? 0;
 }
 
 /* ───────────────────── Roulette constants / helpers ──────────────── */
@@ -80,7 +87,7 @@ function buildStrip(pool: Card[], winner: Card): Card[] {
 export function ClawMachine({ onReady }: { onReady?: () => void }) {
   /* ── data state ── */
   const [cards, setCards] = useState<Card[]>([]);
-  const [tiers, setTiers] = useState<Card[][]>([[], [], [], []]);
+  const [tiers, setTiers] = useState<Card[][]>([[], [], [], [], []]);
   const [loading, setLoading] = useState(true);
 
   /* ── roulette state ── */
@@ -161,21 +168,24 @@ export function ClawMachine({ onReady }: { onReady?: () => void }) {
     return () => bgMusic.current?.dispose();
   }, []);
 
-  /* ── load cards on mount ── */
+  /* ── load slabs on mount ── */
   useEffect(() => {
-    searchCards({ pageSize: 250, select: LIST_SELECT })
-      .then((res) => {
-        const data = res.data.filter((c) => c.images?.small);
+    fetchMachineSlabs()
+      .then((slabs) => {
+        const data = slabs.map(slabToCard).filter((c) => c.images?.small);
         setCards(data);
-        const t: Card[][] = [[], [], [], []];
+        const t: Card[][] = [[], [], [], [], []];
         for (const c of data) t[tierIndexForCard(c)].push(c);
         setTiers(t);
-        // Build an idle preview strip
+        // Build a small idle preview strip (fewer = faster first paint)
         const idle = Array.from(
-          { length: 15 },
+          { length: Math.min(7, data.length) },
           () => data[Math.floor(Math.random() * data.length)],
         );
         setStrip(idle);
+
+        // Pre-warm image cache for the first batch of cards
+        warmImageCache(data.slice(0, 50).map((c) => c.images.small));
       })
       .finally(() => {
         setLoading(false);
@@ -301,7 +311,7 @@ export function ClawMachine({ onReady }: { onReady?: () => void }) {
 
     // Preload the large modal image during the spin so it's cached when the modal opens
     const modalSrc = winner.images.large || winner.images.small;
-    const preload = new Image();
+    const preload = new globalThis.Image();
     preload.src = modalSrc;
     preload.onload = () => setImgLoaded(true);
 
@@ -453,12 +463,14 @@ export function ClawMachine({ onReady }: { onReady?: () => void }) {
               className="shrink-0 transition-transform duration-150"
               style={{ width: CARD_W }}
             >
-              <div className="aspect-3/4 overflow-hidden rounded-lg bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-muted">
+                <Image
                   src={card.images.small}
                   alt={card.name}
-                  className="h-full w-full object-contain"
+                  fill
+                  sizes="200px"
+                  quality={50}
+                  className="object-contain"
                   draggable={false}
                 />
               </div>
@@ -618,13 +630,15 @@ export function ClawMachine({ onReady }: { onReady?: () => void }) {
                 {!imgLoaded && (
                   <Skeleton className="absolute inset-0 rounded-lg" />
                 )}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={wonCard.images.large || wonCard.images.small}
-                  alt={wonCard.name}
-                  className={`absolute inset-0 h-full w-full rounded-lg object-contain shadow-lg transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-                  onLoad={() => setImgLoaded(true)}
-                />
+                <div className={`transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}>
+                  <FlipCard
+                    front={wonCard.images.large || wonCard.images.small}
+                    back={wonCard.images.back}
+                    alt={wonCard.name}
+                    className="aspect-3/4 w-52"
+                    onFrontLoad={() => setImgLoaded(true)}
+                  />
+                </div>
               </div>
               <p className="text-lg font-semibold">{wonCard.name}</p>
               <div className="flex items-center gap-2">

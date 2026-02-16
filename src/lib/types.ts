@@ -52,6 +52,7 @@ export interface WeaknessResistance {
 export interface CardImages {
   small: string;
   large: string;
+  back?: string;
 }
 
 export interface TcgPlayerPrices {
@@ -145,4 +146,33 @@ export interface RaritiesResponse {
 
 export interface TypesResponse {
   data: string[];
+}
+
+/* ───────────────────── Slab Cash API types ───────────────────── */
+
+export interface SlabMachineRef {
+  id: string;
+  slabId: string;
+  machineId: string;
+  chainId: number;
+  rarity: string;
+}
+
+export interface Slab {
+  id: string;
+  tokenId: string;
+  chainId: number;
+  machines: SlabMachineRef[];
+  value: string;
+  owner: string;
+  state: string;
+  external?: { tokenId: string; chainId: number } | null;
+  imageUrl?: string;
+  description?: string;
+  attributes?: Record<string, unknown> | null;
+  imageUrls?: string[] | null;
+}
+
+export interface SlabListResponse {
+  slabs: Slab[];
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Card } from "@/lib/types";
-import { searchCards, getCardMarketPrice, LIST_SELECT } from "@/lib/api";
+import { fetchMachineSlabs, slabToCard, getCardMarketPrice, warmImageCache } from "@/lib/api";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   FilterBar,
@@ -52,6 +52,10 @@ export function CardCatalogue({ onReady }: { onReady?: () => void }) {
     ],
   );
 
+  /* All slabs loaded once; filtered/sorted client-side */
+  const allSlabCards = useRef<Card[]>([]);
+  const slabsFetched = useRef(false);
+
   const fetchCards = useCallback(async () => {
     const cache = cacheRef.current.get(queryKey);
     if (cache) {
@@ -72,16 +76,32 @@ export function CardCatalogue({ onReady }: { onReady?: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await searchCards({
-        name: debouncedName || undefined,
-        type: filters.type || undefined,
-        setId: filters.setId || undefined,
-        rarity: filters.rarity || undefined,
-        page: 1,
-        pageSize: PRICE_SORT_PAGE_SIZE,
-        select: LIST_SELECT,
-      });
-      const sorted = [...res.data].sort((a, b) => {
+      if (!slabsFetched.current) {
+        const slabs = await fetchMachineSlabs();
+        allSlabCards.current = slabs
+          .map(slabToCard)
+          .filter((c) => c.images?.small);
+        slabsFetched.current = true;
+
+        // Pre-warm first page of catalogue images
+        warmImageCache(
+          allSlabCards.current.slice(0, 18).map((c) => c.images.small),
+        );
+      }
+
+      let filtered = allSlabCards.current;
+
+      if (debouncedName) {
+        const lower = debouncedName.toLowerCase();
+        filtered = filtered.filter((c) =>
+          c.name.toLowerCase().includes(lower),
+        );
+      }
+      if (filters.rarity) {
+        filtered = filtered.filter((c) => c.rarity === filters.rarity);
+      }
+
+      const sorted = [...filtered].sort((a, b) => {
         const pa = getCardMarketPrice(a);
         const pb = getCardMarketPrice(b);
         return filters.sortOrder === "priceDesc" ? pb - pa : pa - pb;
@@ -98,7 +118,7 @@ export function CardCatalogue({ onReady }: { onReady?: () => void }) {
       }
       cacheRef.current.set(queryKey, pageCache);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load cards");
+      setError(e instanceof Error ? e.message : "Failed to load slabs");
       setCards([]);
       setTotalCount(0);
     } finally {
@@ -110,8 +130,6 @@ export function CardCatalogue({ onReady }: { onReady?: () => void }) {
     }
   }, [
     debouncedName,
-    filters.type,
-    filters.setId,
     filters.rarity,
     filters.sortOrder,
     queryKey,

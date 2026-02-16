@@ -5,6 +5,8 @@ import type {
   SetListResponse,
   RaritiesResponse,
   TypesResponse,
+  Slab,
+  SlabListResponse,
 } from "./types";
 
 /** Base URL for API requests. Use origin in browser so fetches always hit the same host. */
@@ -137,4 +139,79 @@ export function getCardMarketPrice(card: Card): number {
   return 0;
 }
 
-export type { Card, Set };
+/* ───────────────────── Slab Cash API ───────────────────── */
+
+/** Fetch big-hitter slabs for the configured machine (used by claw roulette). */
+export async function fetchBigHitters(): Promise<Slab[]> {
+  const res = await fetchJson<SlabListResponse>("/api/slabs/big-hitters");
+  return res.slabs ?? [];
+}
+
+/** Fetch all slabs for the configured machine (used by catalogue). */
+export async function fetchMachineSlabs(): Promise<Slab[]> {
+  const res = await fetchJson<SlabListResponse>("/api/slabs/machine");
+  return res.slabs ?? [];
+}
+
+/** USDC uses 6 decimal places. */
+const USDC_DECIMALS = 1_000_000;
+
+/**
+ * Convert a Slab into a Card-compatible object so existing UI components
+ * (CardGrid, CardThumbnail, CardDetailModal, roulette strip) work unchanged.
+ */
+export function slabToCard(slab: Slab): Card {
+  const rarity = slab.machines?.[0]?.rarity ?? "Common";
+  const value = (parseFloat(slab.value) || 0) / USDC_DECIMALS;
+  const attrs = slab.attributes as Record<string, string> | null | undefined;
+
+  const smallImg = slab.imageUrl ?? slab.imageUrls?.[0] ?? "";
+  const largeImg = slab.imageUrls?.[0] ?? smallImg;
+  const backImg = slab.imageUrls?.[1] ?? undefined;
+
+  const cardName = attrs?.["Card Name"] ?? slab.description ?? `Slab #${slab.tokenId}`;
+  const grade = attrs?.["The Grade"] ?? "";
+  const gradingCo = attrs?.["Grading Company"] ?? "";
+  const gradeLabel = grade && gradingCo ? `${gradingCo} ${grade}` : grade || gradingCo;
+
+  return {
+    id: slab.id,
+    name: cardName,
+    supertype: gradeLabel || "Slab",
+    number: slab.tokenId,
+    rarity,
+    flavorText: slab.description,
+    images: { small: smallImg, large: largeImg, back: backImg },
+    set: {
+      id: "slab",
+      name: attrs?.["Set"] ?? "Slab Cash",
+      series: "Slab",
+      printedTotal: 0,
+      total: 0,
+      releaseDate: attrs?.["Year"] ?? "",
+      updatedAt: "",
+    },
+    tcgplayer: {
+      url: "",
+      updatedAt: "",
+      prices: {
+        normal: { market: value },
+      },
+    },
+  };
+}
+
+/**
+ * Fire-and-forget: pre-warm the Next.js image cache for the given URLs.
+ * Runs in the background so subsequent image loads are instant.
+ */
+export function warmImageCache(imageUrls: string[]): void {
+  if (imageUrls.length === 0) return;
+  fetch("/api/slabs/warm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ urls: imageUrls }),
+  }).catch(() => {});
+}
+
+export type { Card, Set, Slab };

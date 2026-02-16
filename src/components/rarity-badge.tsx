@@ -6,6 +6,8 @@ const RARITY_COLORS: Record<string, string> = {
   Uncommon:    "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
   Rare:        "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   "Rare Holo": "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  Mythic:      "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+  Legendary:   "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
 };
 
 interface RarityBadgeProps {
