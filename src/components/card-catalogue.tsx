@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Card } from "@/lib/types";
 import { searchCards, getCardMarketPrice, LIST_SELECT } from "@/lib/api";
 import { useDebounce } from "@/hooks/use-debounce";
-import { FilterBar, DEFAULT_FILTERS, type FilterState } from "@/components/filter-bar";
+import {
+  FilterBar,
+  DEFAULT_FILTERS,
+  type FilterState,
+} from "@/components/filter-bar";
 import { CardGrid } from "@/components/card-grid";
 import { CardDetailModal } from "@/components/card-detail-modal";
 import { Pagination } from "@/components/pagination";
